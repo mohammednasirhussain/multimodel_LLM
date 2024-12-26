@@ -106,97 +106,126 @@ def main():
                 st.write(response.text)
                 
     elif typepdf == "Images":
-        image_file_name = st.file_uploader("Upload your image file.", type=['jpg', 'jpeg', 'png', 'tif'])
-        if image_file_name:
-            path3 = '/Users/....'
-            fpath = image_file_name.name
-            fpath2 = (os.path.join(path3, fpath))
-            image_file = genai.upload_file(path=fpath2)
-            
-            while image_file.state.name == "PROCESSING":
-                time.sleep(10)
-                image_file = genai.get_file(image_file.name)
-            if image_file.state.name == "FAILED":
-              raise ValueError(image_file.state.name)
-            
-            prompt2 = st.text_input("Enter your prompt.") 
-            if prompt2:
-                generation_config = {
-                  "temperature": temperature,
-                  "top_p": top_p,
-                  "max_output_tokens": max_tokens,}
-                genai.configure(api_key=GOOGLE_API_KEY)
-                model = genai.GenerativeModel(model_name=model, generation_config=generation_config,)
+      image_file_name = st.file_uploader("Upload your image file.", type=['jpg', 'jpeg', 'png', 'tif'])
+      if image_file_name:
+        # Use a local temp directory to store the file temporarily
+        temp_dir = '/tmp'  # Use a temp directory on the local system
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        # Save the uploaded file to a temporary location
+        fpath = os.path.join(temp_dir, image_file_name.name)
+        with open(fpath, 'wb') as f:
+            f.write(image_file_name.getbuffer())  # Save the uploaded file content
 
-                start_time = time.time()  # Start time before the model generates content
-                response = model.generate_content([image_file, prompt2],
-                                                  request_options={"timeout": 600})
-                end_time = time.time()  # End time after the response is received
-                response_time = end_time - start_time  # Calculate response time
-                st.write(f"Response time: {response_time:.2f} seconds")  # Display response time
-                st.markdown(response.text)
-                
-                genai.delete_file(image_file.name)
-                print(f'Deleted file {image_file.uri}')
+        # Upload the file to GenAI
+        image_file = genai.upload_file(path=fpath)
+        
+        while image_file.state.name == "PROCESSING":
+            time.sleep(10)
+            image_file = genai.get_file(image_file.name)
+        
+        if image_file.state.name == "FAILED":
+            raise ValueError(image_file.state.name)
+        
+        # Prompt for the image analysis
+        prompt2 = st.text_input("Enter your prompt.") 
+        if prompt2:
+            generation_config = {
+                "temperature": temperature,
+                "top_p": top_p,
+                "max_output_tokens": max_tokens,
+            }
+            genai.configure(api_key=GOOGLE_API_KEY)
+            model = genai.GenerativeModel(model_name=model, generation_config=generation_config)
+            
+            start_time = time.time()  # Start time before the model generates content
+            response = model.generate_content([image_file, prompt2], request_options={"timeout": 600})
+            end_time = time.time()  # End time after the response is received
+            response_time = end_time - start_time  # Calculate response time
+            st.write(f"Response time: {response_time:.2f} seconds")  # Display response time
+            st.markdown(response.text)
+            
+            # Clean up by deleting the file after use
+            genai.delete_file(image_file.name)
+            print(f'Deleted file {image_file.uri}')
            
     elif typepdf == "Video, mp4 file":
-        video_file_name = st.file_uploader("Upload your video")
-        if video_file_name:
-            path3 = '/Users/....'
-            fpath = video_file_name.name
-            fpath2 = (os.path.join(path3, fpath))
-            video_file = genai.upload_file(path=fpath2)
-            
-            while video_file.state.name == "PROCESSING":
-                time.sleep(10)
-                video_file = genai.get_file(video_file.name)
-            if video_file.state.name == "FAILED":
-              raise ValueError(video_file.state.name)
+      video_file_name = st.file_uploader("Upload your video")
+      if video_file_name:
+        # Use a local temp directory to store the video file temporarily
+        temp_dir = '/tmp'  # Use a temp directory on the local system
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        # Save the uploaded video to a temporary location
+        fpath = os.path.join(temp_dir, video_file_name.name)
+        with open(fpath, 'wb') as f:
+            f.write(video_file_name.getbuffer())  # Save the uploaded file content
 
-            prompt3 = st.text_input("Enter your prompt.") #"what is said in this video in the first 20 seconds?"
-            if prompt3:
-                start_time = time.time()  # Start time before the model generates content
-                genai.configure(api_key=GOOGLE_API_KEY)
-                model = genai.GenerativeModel(model_name=model)
-                
-                response = model.generate_content([video_file, prompt3],
-                                                  request_options={"timeout": 600})
-                end_time = time.time()  # End time after the response is received
-                response_time = end_time - start_time  # Calculate response time
-                st.write(f"Response time: {response_time:.2f} seconds")  # Display response time
-                st.markdown(response.text)
-                
-                genai.delete_file(video_file.name)
-                print(f'Deleted file {video_file.uri}')
+        # Upload the file to GenAI
+        video_file = genai.upload_file(path=fpath)
+        
+        while video_file.state.name == "PROCESSING":
+            time.sleep(10)
+            video_file = genai.get_file(video_file.name)
+        
+        if video_file.state.name == "FAILED":
+            raise ValueError(video_file.state.name)
+        
+        # Prompt for the video analysis
+        prompt3 = st.text_input("Enter your prompt.") #"what is said in this video in the first 20 seconds?"
+        if prompt3:
+            start_time = time.time()  # Start time before the model generates content
+            genai.configure(api_key=GOOGLE_API_KEY)
+            model = genai.GenerativeModel(model_name=model)
+            
+            response = model.generate_content([video_file, prompt3], request_options={"timeout": 600})
+            end_time = time.time()  # End time after the response is received
+            response_time = end_time - start_time  # Calculate response time
+            st.write(f"Response time: {response_time:.2f} seconds")  # Display response time
+            st.markdown(response.text)
+            
+            # Clean up by deleting the file after use
+            genai.delete_file(video_file.name)
+            print(f'Deleted file {video_file.uri}')
       
     elif typepdf == "Audio files":
-        audio_file_name = st.file_uploader("Upload your audio")
-        if audio_file_name:
-            path3 = '/Users/....'
-            fpath = audio_file_name.name
-            fpath2 = (os.path.join(path3, fpath))
-            audio_file = genai.upload_file(path=fpath2)
+      audio_file_name = st.file_uploader("Upload your audio")
+      if audio_file_name:
+        # Use a local temp directory to store the file temporarily
+        temp_dir = '/tmp'  # Use a temp directory on the local system
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        # Save the uploaded audio to a temporary location
+        fpath = os.path.join(temp_dir, audio_file_name.name)
+        with open(fpath, 'wb') as f:
+            f.write(audio_file_name.getbuffer())  # Save the uploaded file content
 
-            while audio_file.state.name == "PROCESSING":
-                time.sleep(10)
-                audio_file = genai.get_file(audio_file.name)
-            if audio_file.state.name == "FAILED":
-              raise ValueError(audio_file.state.name)
-
-            prompt3 = st.text_input("Enter your prompt.") #"what is said in this video in the first 20 seconds?"
-            if prompt3:
-                start_time = time.time()  # Start time before the model generates content
-                genai.configure(api_key=GOOGLE_API_KEY)
-                model = genai.GenerativeModel(model_name=model)
-                response = model.generate_content([audio_file, prompt3],
-                                                  request_options={"timeout": 600})
-                end_time = time.time()  # End time after the response is received
-                response_time = end_time - start_time  # Calculate response time
-                st.write(f"Response time: {response_time:.2f} seconds")  # Display response time
-                st.markdown(response.text)
-                
-                genai.delete_file(audio_file.name)
-                print(f'Deleted file {audio_file.uri}')
+        # Upload the file to GenAI
+        audio_file = genai.upload_file(path=fpath)
+        
+        while audio_file.state.name == "PROCESSING":
+            time.sleep(10)
+            audio_file = genai.get_file(audio_file.name)
+        
+        if audio_file.state.name == "FAILED":
+            raise ValueError(audio_file.state.name)
+        
+        # Prompt for audio analysis
+        prompt3 = st.text_input("Enter your prompt.")  # Example: "What is said in this audio file?"
+        if prompt3:
+            start_time = time.time()  # Start time before the model generates content
+            genai.configure(api_key=GOOGLE_API_KEY)
+            model = genai.GenerativeModel(model_name=model)
+            
+            response = model.generate_content([audio_file, prompt3], request_options={"timeout": 600})
+            end_time = time.time()  # End time after the response is received
+            response_time = end_time - start_time  # Calculate response time
+            st.write(f"Response time: {response_time:.2f} seconds")  # Display response time
+            st.markdown(response.text)
+            
+            # Clean up by deleting the file after use
+            genai.delete_file(audio_file.name)
+            print(f'Deleted file {audio_file.uri}')
 
 
 if __name__ == '__main__':
