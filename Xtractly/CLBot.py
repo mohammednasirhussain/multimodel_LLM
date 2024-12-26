@@ -8,7 +8,7 @@ load_dotenv()
 path2 = '/Users/....'
 
 def page_setup():
-    st.header("Chat with different types of media/files!", anchor=False, divider="blue")
+    st.header("Interaction with PDF and Image by CL-Bot ", anchor=False, divider="blue")
 
     hide_menu_style = """
             <style>
